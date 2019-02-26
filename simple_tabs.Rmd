@@ -1,0 +1,176 @@
+---
+title: "w/ Tabs"
+output: 
+  html_document:
+    theme: journal
+---
+```{r, include=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggthemes)
+library(viridis)
+```
+
+###What happens when I have a bunch of plots?
+
+```{r chunk 1, warning=FALSE, echo=FALSE}
+
+
+# dataframe with econ stats in it 
+
+df <- longley %>% 
+  mutate(GNP.adj = (GNP/GNP.deflator)*100)
+
+
+# generating input dataset for bar plot of 1950s population levels
+
+plot.input <- df %>% select(Year, Unemployed, Employed, Armed.Forces, Population) %>% 
+      gather(., pop.type, pop.num, -Year) %>% 
+        filter(between(Year, 1951, 1959))
+
+# Faceted bar charts
+
+ggplot(plot.input, aes(pop.type, pop.num)) +
+  geom_bar(stat = "identity") + 
+    facet_wrap(~Year) + 
+      ggtitle("it changes!!") + 
+      theme_bw() + 
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Stacked barchart 
+
+ggplot(plot.input, aes(Year, pop.num)) +
+  geom_bar(aes(fill = pop.type), stat = "identity", alpha = .6) + 
+  scale_fill_viridis(discrete = TRUE) + 
+  scale_x_continuous(breaks = c(seq(min(plot.input$Year), max(plot.input$Year)))) + 
+      ggtitle("it changes!! still") + 
+      theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Stacked Area Chart 
+ggplot(plot.input, aes(Year, pop.num)) +
+  geom_area(aes(fill = pop.type), alpha = .5) + 
+  scale_fill_viridis(discrete = TRUE) + 
+  scale_x_continuous(breaks = c(seq(min(plot.input$Year), max(plot.input$Year)))) + 
+      ggtitle("it changes! again") + 
+      theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+```{r growth figures, echo=FALSE, warning=FALSE}
+
+growth.input <- df %>% 
+  mutate(
+    growth = (GNP - lag(GNP)) / lag(GNP),
+    growth.adj = (GNP.adj - lag(GNP.adj)) / lag(GNP.adj)) %>% 
+      drop_na(growth)
+
+ggplot(growth.input) + 
+  geom_line(aes(Year, growth), size = .5) + 
+    scale_y_continuous(breaks = c(-0.1, 0, .1, .2, .3), limits = c(-0.1, .3),
+                       labels = scales::percent) + 
+       scale_x_continuous(breaks = c(seq(min(plot.input$Year), max(plot.input$Year)))) + 
+  ggtitle("Growth: Not Adjusted For Infaltion") + 
+        theme_bw()
+  
+
+ggplot(growth.input) + 
+  geom_line(aes(Year, growth.adj), size = .5) + 
+  scale_y_continuous(breaks = c(-0.1, 0, .1, .2), limits = c(-0.1, .2),
+                   labels = scales::percent) + 
+       scale_x_continuous(breaks = c(seq(min(growth.input$Year), max(growth.input$Year)))) + 
+   ggtitle("Growth: Adjusted For Infaltion") + 
+        theme_bw()
+
+
+    
+```
+
+##Organization Time using tabsets!!! 
+
+## Change in Share Of the Population {.tabset}
+
+###  Faceted Bar Graphs
+
+This is the first attempt
+
+```{r facet bar chart, echo=FALSE, warning=FALSE}
+
+# Faceted bar charts
+
+ggplot(plot.input, aes(pop.type, pop.num)) +
+  geom_bar(stat = "identity") + 
+    facet_wrap(~Year) + 
+      ggtitle("it changes!!") + 
+      theme_bw() + 
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+###  Stacked Bar Graphs
+
+This is the second try 
+
+```{r stacked bar, echo=FALSE, warning=FALSE}
+
+# Stacked barchart 
+
+ggplot(plot.input, aes(Year, pop.num)) +
+  geom_bar(aes(fill = pop.type), stat = "identity", alpha = .6) + 
+  scale_fill_viridis(discrete = TRUE) + 
+  scale_x_continuous(breaks = c(seq(min(plot.input$Year), max(plot.input$Year)))) + 
+      ggtitle("it changes!! still") + 
+      theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+###  Area Charts
+
+This is the last thing i will ever do
+
+```{r area chart, echo = FALSE, warning=FALSE}
+# Stacked Area Chart 
+ggplot(plot.input, aes(Year, pop.num)) +
+  geom_area(aes(fill = pop.type), alpha = .5) + 
+  scale_fill_viridis(discrete = TRUE) + 
+  scale_x_continuous(breaks = c(seq(min(plot.input$Year), max(plot.input$Year)))) + 
+      ggtitle("it changes! again") + 
+      theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Growth Rates {.tabset}
+
+### Nominal Growth Rate
+
+```{r nominal growth, echo=FALSE, warning=FALSE}
+
+ggplot(growth.input) + 
+  geom_line(aes(Year, growth), size = 1) + 
+    scale_y_continuous(breaks = c(-0.1, 0, .1, .2, .3), limits = c(-0.1, .3),
+                       labels = scales::percent) + 
+       scale_x_continuous(breaks = c(seq(min(plot.input$Year), max(plot.input$Year)))) + 
+  ggtitle("Growth: Not Adjusted For Infaltion") + 
+        theme_bw()
+  
+```
+
+### Inflation-adjusted Growth Rate 
+
+```{r adj growth, echo=FALSE, warning=FALSE}
+
+ggplot(growth.input, aes(Year, growth.adj)) + 
+  geom_line( size = 1 ) + 
+  geom_smooth(fill = "grey70", linetype = 0, method = "lm" ) + 
+  scale_y_continuous(breaks = c(-0.1, 0, .1, .2), limits = c(-0.1, .2),
+                   labels = scales::percent) + 
+       scale_x_continuous(breaks = c(seq(min(growth.input$Year), max(growth.input$Year)))) + 
+   ggtitle("Growth: Adjusted For Infaltion") + 
+        theme_bw()
+
+
+```

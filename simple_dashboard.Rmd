@@ -1,0 +1,165 @@
+---
+title: "Dashboard Example"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+    theme: journal
+---
+```{r setup and data import, echo=FALSE, warning=FALSE, include=FALSE}
+
+# Reading relevant packages 
+library(tidyverse)
+library(ggthemes)
+library(viridis)
+library(corrplot)
+library(sjPlot)
+
+
+# dataframe with econ stats in it 
+
+df <- longley %>% 
+  mutate(GNP.adj = (GNP/GNP.deflator)*100)
+
+
+# generating input dataset for bar plot of 1950s population levels, slightly different than 
+
+plot.input <- df %>% select(Year, Unemployed, Employed, Armed.Forces, Population) %>% 
+      gather(., pop.type, pop.num, -Year) 
+
+# generating input dataset for growth plots
+#    calcualting nominal and real growth rates
+
+growth.input <- df %>% 
+  mutate(
+    growth = (GNP - lag(GNP)) / lag(GNP),
+    growth.adj = (GNP.adj - lag(GNP.adj)) / lag(GNP.adj)) %>% 
+      drop_na(growth)
+
+
+```
+
+
+Exploratory Analysis
+=====================================  
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+From this poorly assembled cluster of data I think that: 
+
+*  Population number has a small if any association with growth 
+*  There may be an intriguing relationship **between the population of the armed forces and GNP**
+*  I wil try to explore this on the next page
+
+Column 
+------------------------------------- 
+
+```{r area chart, echo = FALSE, warning=FALSE}
+# Stacked Area Chart 
+ggplot(plot.input, aes(Year, pop.num)) +
+  geom_area(aes(fill = pop.type), alpha = .5) + 
+  scale_fill_viridis(discrete = TRUE) + 
+  scale_x_continuous(breaks = c(seq(min(plot.input$Year), max(plot.input$Year)))) + 
+      ggtitle("it changes! again") + 
+      theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+Column {.tabset}
+-------------------------------------
+
+### GNP Over Time
+
+```{r nominal and adj gnp, echo=FALSE, warning=FALSE}
+
+ggplot(growth.input) + 
+  geom_line(aes(Year, GNP), size = 1) + 
+  geom_line(aes(Year, GNP.adj), size = 1, linetype = "dashed") + 
+       scale_x_continuous(breaks = c(seq(min(growth.input$Year), max(growth.input$Year)))) + 
+  ggtitle("GNP over time") + 
+        theme_bw()
+```  
+
+### Nominal Growth Rate
+
+```{r nominal growth, echo=FALSE, warning=FALSE}
+
+ggplot(growth.input) + 
+  geom_line(aes(Year, growth), size = 1) + 
+    scale_y_continuous(breaks = c(-0.1, 0, .1, .2, .3), limits = c(-0.1, .3),
+                       labels = scales::percent) + 
+       scale_x_continuous(breaks = c(seq(min(growth.input$Year), max(growth.input$Year)))) + 
+  ggtitle("Growth: Not Adjusted For Infaltion") + 
+        theme_bw()
+  
+```
+
+### Inflation-adj. Growth 
+
+```{r adj growth, echo=FALSE, warning=FALSE}
+
+ggplot(growth.input, aes(Year, growth.adj)) + 
+  geom_line( size = 1 ) + 
+  geom_smooth(fill = "grey70", linetype = 0, method = "lm" ) + 
+  scale_y_continuous(breaks = c(-0.1, 0, .1, .2), limits = c(-0.1, .2),
+                   labels = scales::percent) + 
+       scale_x_continuous(breaks = c(seq(min(growth.input$Year), max(growth.input$Year)))) + 
+   ggtitle("Growth: Adjusted For Infaltion") + 
+        theme_bw()
+
+```
+
+Regression Analysis
+=====================================  
+
+Column 
+------------------------------------- 
+
+### Correlation Matrix
+
+```{r, echo=FALSE, warning=FALSE}
+
+# Using original 'wide' dataset to build out the regression analysis to build correlation matrix
+
+
+df.cor <- cor(df)
+
+corrplot(df.cor, method = "number", type = "lower")
+
+```
+
+Column {.tabset}
+------------------------------------- 
+
+### Model Results 
+```{r model selection, echo=FALSE}
+
+model_example <- lm(GNP.adj ~ Year + Population + Armed.Forces + Unemployed, data = df)
+
+
+
+sjPlot::plot_model(model_example)
+
+
+```
+
+### Model Diagnostics: Residuals
+```{r model diagnostics, echo=FALSE}
+
+model_example <- lm(GNP.adj ~ Year + Population + Armed.Forces + Unemployed, data = df)
+
+
+
+sjPlot::plot_model(model_example, type = "resid")
+
+
+
+```
+
+Assessment {.sidebar}
+-----------------------------------------------------------------------
+The correlation matrix shows that many potential independent variables are correlated to each other. This may endanger any mutiple regression! I am terrified! But we do it anyway!!! Reisudals appear very biased and standard error is large for the estimators. I remain afraid. Good thing I presented my misguided analysis clearly. 
+
+
+

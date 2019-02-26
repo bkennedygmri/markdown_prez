@@ -1,0 +1,58 @@
+---
+title: "Step 1: Just R markdown"
+output: 
+  html_document:
+    theme: journal 
+---
+
+###Rmarkdown is Very Easy
+In R Studio all you need to do is: 
+
+*  File > New File >  R Markdown > Choose Default Output Format > 'html'
+*  make sure your *yaml* header (the thing at the top of the .rmd file) is ok 
+*  type some stuff in the space below the header
+*  then you can 'Knit' or print your html document via the button on the toolbar in R Studio or via **ctrl + shift + k**
+
+
+###You create content via 'chunks'
+
+* you can the include code used in the final html doc
+
+```{r chunk 1, warning=FALSE}
+library(tidyverse)
+library(ggthemes)
+
+# dataframe with econ stats in it 
+
+df <- longley
+
+# making simple line graph
+
+ggplot(df, aes(Year, Armed.Forces)) + 
+  geom_line() + 
+    theme_bw()
+
+
+```
+
+*  or not not include it
+
+```{r chunk no code, echo=FALSE}
+library(tidyverse)
+library(ggthemes)
+
+# dataframe with econ stats in it 
+
+df <- longley
+
+# making simple line graph
+
+ggplot(df, aes(Year, Armed.Forces)) + 
+  geom_line() + 
+    theme_bw()
+
+
+```
+
+
+
