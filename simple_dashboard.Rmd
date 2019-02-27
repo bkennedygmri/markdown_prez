@@ -7,7 +7,9 @@ output:
 ---
 ```{r setup and data import, echo=FALSE, warning=FALSE, include=FALSE}
 
-# Reading relevant packages 
+# Reading relevant packages
+#  Note that i am not including the below code in via 'include = FALSE'
+
 library(tidyverse)
 library(ggthemes)
 library(viridis)
@@ -21,13 +23,13 @@ df <- longley %>%
   mutate(GNP.adj = (GNP/GNP.deflator)*100)
 
 
-# generating input dataset for bar plot of 1950s population levels, slightly different than 
+# generating input dataset for bar plot of 1950s population levels
 
 plot.input <- df %>% select(Year, Unemployed, Employed, Armed.Forces, Population) %>% 
       gather(., pop.type, pop.num, -Year) 
 
 # generating input dataset for growth plots
-#    calcualting nominal and real growth rates
+#    calcualting nominal (growth) and real growth (growth.adj) rates
 
 growth.input <- df %>% 
   mutate(
@@ -45,9 +47,8 @@ Exploratory Analysis
 Inputs {.sidebar}
 -----------------------------------------------------------------------
 
-From this poorly assembled cluster of data I think that: 
+From this poorly assembled data I think that: 
 
-*  Population number has a small if any association with growth 
 *  There may be an intriguing relationship **between the population of the armed forces and GNP**
 *  I wil try to explore this on the next page
 
@@ -72,6 +73,7 @@ Column {.tabset}
 ### GNP Over Time
 
 ```{r nominal and adj gnp, echo=FALSE, warning=FALSE}
+# making line plot of gnp over time w/ both real and nominal gnp 
 
 ggplot(growth.input) + 
   geom_line(aes(Year, GNP), size = 1) + 
@@ -84,6 +86,7 @@ ggplot(growth.input) +
 ### Nominal Growth Rate
 
 ```{r nominal growth, echo=FALSE, warning=FALSE}
+# line plot of nominal growth rate
 
 ggplot(growth.input) + 
   geom_line(aes(Year, growth), size = 1) + 
@@ -98,6 +101,7 @@ ggplot(growth.input) +
 ### Inflation-adj. Growth 
 
 ```{r adj growth, echo=FALSE, warning=FALSE}
+#line plot of real growth rate 
 
 ggplot(growth.input, aes(Year, growth.adj)) + 
   geom_line( size = 1 ) + 
@@ -120,11 +124,13 @@ Column
 
 ```{r, echo=FALSE, warning=FALSE}
 
-# Using original 'wide' dataset to build out the regression analysis to build correlation matrix
+# Using original 'wide' dataset to build correlation matrix
+# note echo is set to 'FALSE' so the plot will print but not the code
 
-
+# creating correlation matrix
 df.cor <- cor(df)
 
+# creating correlation matrix figure w. package corrplot 
 corrplot(df.cor, method = "number", type = "lower")
 
 ```
@@ -134,11 +140,13 @@ Column {.tabset}
 
 ### Model Results 
 ```{r model selection, echo=FALSE}
+# making a dumb multiple regression model and then printing graphic results via sjPlot
 
+# multiple regression
 model_example <- lm(GNP.adj ~ Year + Population + Armed.Forces + Unemployed, data = df)
 
 
-
+# regression results 
 sjPlot::plot_model(model_example)
 
 
@@ -147,13 +155,9 @@ sjPlot::plot_model(model_example)
 ### Model Diagnostics: Residuals
 ```{r model diagnostics, echo=FALSE}
 
-model_example <- lm(GNP.adj ~ Year + Population + Armed.Forces + Unemployed, data = df)
-
-
+# residual diagnostics for dumb model plotted using sjPlot, note type = "residual" 
 
 sjPlot::plot_model(model_example, type = "resid")
-
-
 
 ```
 
