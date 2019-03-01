@@ -3,6 +3,7 @@ The below should cover what you need to get started.
 
 ### Rmarkdown  
 Cheat Sheet: https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf
+
 Everything your ever want to know: https://bookdown.org/yihui/rmarkdown/
 
 ### Flex Dashboard 
